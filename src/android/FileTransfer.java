@@ -895,7 +895,7 @@ public class FileTransfer extends CordovaPlugin {
                             // write bytes to file
                             byte[] buffer = new byte[MAX_BUFFER_SIZE];
                             int bytesRead = 0;
-                            outputStream = resourceApi.openOutputStream(targetUri);
+                            outputStream = resourceApi.openOutputStream(targetUri, true);
                             while ((bytesRead = inputStream.read(buffer)) > 0) {
                                 outputStream.write(buffer, 0, bytesRead);
                                 // Send a progress event.
@@ -982,10 +982,6 @@ public class FileTransfer extends CordovaPlugin {
                     if (result == null) {
                         result = new PluginResult(PluginResult.Status.ERROR, createFileTransferError(CONNECTION_ERR, source, target, connection, null));
                     }
-                    // Remove incomplete download.
-                    if (!cached && result.getStatus() != PluginResult.Status.OK.ordinal() && file != null) {
-                        file.delete();
-                    }
                     context.sendPluginResult(result);
                 }
             }
@@ -1005,10 +1001,6 @@ public class FileTransfer extends CordovaPlugin {
             cordova.getThreadPool().execute(new Runnable() {
                 public void run() {
                     synchronized (context) {
-                        File file = context.targetFile;
-                        if (file != null) {
-                            file.delete();
-                        }
                         // Trigger the abort callback immediately to minimize latency between it and abort() being called.
                         JSONObject error = createFileTransferError(ABORTED_ERR, context.source, context.target, null, -1, null);
                         context.sendPluginResult(new PluginResult(PluginResult.Status.ERROR, error));
